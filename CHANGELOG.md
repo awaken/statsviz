@@ -1,14 +1,32 @@
+v0.5.0 / 2022-09-05
+==============
+  * Switch to runtime/metrics as source, major refactor (#75)
+    + New heatmap UI component
+    + Dynamic plots definition based on server side generated config
+    + Add many new plots (scheduler latency, scheduling events, and more)
+    + Add play/pause switch button
+    + Add show/hide GC events switch button
+    + Add time range selector (1m, 5m, 10m)
+  * Switch javascript code to ES6 (#65)
+  * Build and test all examples (#63)
+
+v0.4.1 / 2021-12-12
+==============
+  * Assets are `go:embed`ed, so the minimum go version is now go1.16 (#55)
+  * Polishing (README, small UI improvements) (#54)
+  * Small ui improvements: link to go.dev rather than golang.org
+
 v0.4.0 / 2021-05-08
 ==================
 
   * Auto-reconnect to new server from GUI after closed websocket connection (#49)
-  * Reorganize examples
-  * Make IndexAtRoot returns an `http.HandlerFunc` instead of `http.Handler`
+  * Reorganize examples (#51)
+  * Make `IndexAtRoot` returns an `http.HandlerFunc` instead of `http.Handler` (#52)
 
 v0.3.0 / 2021-02-14
 ==================
 
-  * Enable 'save as png' button on plots
+  * Enable 'save as png' button on plots (#44)
 
 v0.2.2 / 2020-12-13
 ==================
@@ -16,14 +34,15 @@ v0.2.2 / 2020-12-13
   * Use Go Modules for 'github.com/gorilla/websocket' (#39)
   * Support custom frequency (#37)
   * Added fixed go-chi example (#38)
-  * _example: add echo (#22)
-  * _example: add example gin (#34)
+  * `_example`: add echo (#22)
+  * `_example`: add gin example (#34)
   * ci: track coverage
   * RegisterDefault returns an error now
   * Ensure send frequency is a strictly positive integer
   * Don't log if we can't upgrade to websocket
-  * _example: add chi router (#38)
-  * _example: change structure to have one example per directory
+  * `_example`_example: add chi router (#38)
+  * `_example`_example: change structure to have one example per directory
+
 v0.2.1 / 2020-10-29
 ===================
 
