@@ -1,3 +1,63 @@
+v0.8.1 / 2026-07-04
+==============
+  * Bump dependencies:
+    - npm/vite (js)
+    - npm dependencies (js)
+    - _example/* (Go)
+
+v0.8.0 / 2025-11-21
+==============
+  * UI/UX improvments:
+    - performance/fluidity improvements
+    - Alt+Click to show only the clicked category
+    - add plot search/filter bar
+    - fix visual glitches when resizing browser
+
+v0.7.3 / 2025-11-18
+==============
+  * internal/plot: add goroutines plot for !go1.26 (#145)
+  * Frontend rendering optimizations (#144)
+  * Add go1.26 plots cleanup+finalizer queues (#143)
+  * Add a bunch of other go1.26 plots (#142)
+  * Add plots for Go 1.26 scheduler pause metrics (#140)
+
+v0.7.2 / 2025-10-07
+==============
+  * Server zero value dont panic on register (#136)
+  * Add zerovalue example
+
+v0.7.1 / 2025-08-18
+==============
+  * _example: bump dependencies (#129)
+
+v0.7.0 / 2025-07-26
+==============
+  * New plots showing new go1.22 runtime/metrics:
+    + GC Memory Summary
+    + CPU (Garbage Collector)
+  * Frontend redesign/refactor:
+    + Maximize plot button
+    + plot category selector
+
+v0.6.0 / 2023-10-08
+==============
+  * New plots showing new go1.20/go1.21 runtime/metrics: (#111)
+    + GC Cycles
+    + GC Scan
+    + Memory classes
+    + CPU classes
+    + Mutex wait
+  * Users can now add their own plots (#111)
+  * Add light/dark mode selector (#108)
+
+v0.5.2 / 2023-03-29
+==============
+  * Ensure all files have a correct Content-Type (#106)
+
+v0.5.1 / 2022-09-30
+==============
+  * Fix UI on Firefox (#83)
+
 v0.5.0 / 2022-09-05
 ==============
   * Switch to runtime/metrics as source, major refactor (#75)

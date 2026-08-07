@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 
 	"github.com/arl/statsviz"
 	example "github.com/arl/statsviz/_example"
@@ -18,7 +18,9 @@ func main() {
 	e := echo.New()
 
 	mux := http.NewServeMux()
-	_ = statsviz.Register(mux)
+
+	// Register statsviz handlerson the mux.
+	statsviz.Register(mux)
 
 	// Use echo WrapHandler to wrap statsviz ServeMux as echo HandleFunc
 	e.GET("/debug/statsviz/", echo.WrapHandler(mux))
@@ -27,5 +29,7 @@ func main() {
 
 	// Start server
 	fmt.Println("Point your browser to http://localhost:8082/debug/statsviz/")
-	e.Logger.Fatal(e.Start(":8082"))
+	if err := e.Start(":8082"); err != nil {
+		e.Logger.Error("failed", "err", err)
+	}
 }
