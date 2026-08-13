@@ -113,7 +113,7 @@ func testWs(t *testing.T, f http.Handler, URL string) {
 	// Check the content of 2 consecutive payloads.
 	for range 2 {
 		// Verifies that we've received:
-		// - 1 time series (cgo)
+		// - 1 time series (cgo), when cgo is enabled
 		// - 1 heatmap (sizeClasses).
 		var msg struct {
 			Event string `json:"event"`
@@ -129,9 +129,12 @@ func testWs(t *testing.T, f http.Handler, URL string) {
 			t.Fatalf("failed reading json from websocket: %v", err)
 		}
 
-		// The time series must have one and only one element
-		if len(msg.Data.Series.CGo) != 1 {
-			t.Errorf("len(cgo) = %d, want 1", len(msg.Data.Series.CGo))
+		wantCGoLen := 0
+		if cgoEnabled {
+			wantCGoLen = 1
+		}
+		if len(msg.Data.Series.CGo) != wantCGoLen {
+			t.Errorf("len(cgo) = %d, want %d", len(msg.Data.Series.CGo), wantCGoLen)
 		}
 		// Heatmaps should have many elements, check that there's more than one.
 		if len(msg.Data.Series.SizeClasses) <= 1 {

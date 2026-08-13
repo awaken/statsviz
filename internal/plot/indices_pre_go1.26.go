@@ -6,7 +6,6 @@ package plot
 //lint:file-ignore U1000 Ignore unused indices. they're generated
 
 var (
-	idx_cgo_go_to_c_calls_calls                     = mustidx("/cgo/go-to-c-calls:calls")
 	idx_cpu_classes_gc_mark_assist_cpu_seconds      = mustidx("/cpu/classes/gc/mark/assist:cpu-seconds")
 	idx_cpu_classes_gc_mark_dedicated_cpu_seconds   = mustidx("/cpu/classes/gc/mark/dedicated:cpu-seconds")
 	idx_cpu_classes_gc_mark_idle_cpu_seconds        = mustidx("/cpu/classes/gc/mark/idle:cpu-seconds")

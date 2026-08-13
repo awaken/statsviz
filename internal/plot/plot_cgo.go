@@ -1,9 +1,13 @@
+//go:build cgo
+
 package plot
 
 import (
 	"runtime/metrics"
 	"time"
 )
+
+var idx_cgo_go_to_c_calls_calls = mustidx("/cgo/go-to-c-calls:calls")
 
 var _ = register(description{
 	metrics: []string{

@@ -34,9 +34,14 @@ type idxname struct {
 func main() {
 	var all []idxname
 	for _, m := range metrics.All() {
-		if !strings.HasPrefix(m.Name, "/godebug/") {
-			all = append(all, idxname{varname(m.Name), m.Name})
+		if strings.HasPrefix(m.Name, "/godebug/") {
+			continue
 		}
+		// The CGO metric index is declared by the CGO-only plot source file.
+		if m.Name == "/cgo/go-to-c-calls:calls" {
+			continue
+		}
+		all = append(all, idxname{varname(m.Name), m.Name})
 	}
 	slices.SortFunc(all, func(a, b idxname) int {
 		return strings.Compare(a.idx, b.idx)
