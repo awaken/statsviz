@@ -22,9 +22,11 @@ export default class RingBuffer {
     const n = Math.min(lastN, this.#size);
     const result = new Float64Array(n);
 
-    const startIdx = this.#size - n;
-    for (let i = 0; i < n; i++) {
-      result[i] = this.#buf[(this.#start + startIdx + i) % this.#buf.length];
+    const source = (this.#start + this.#size - n) % this.#buf.length;
+    const beforeWrap = Math.min(n, this.#buf.length - source);
+    result.set(this.#buf.subarray(source, source + beforeWrap));
+    if (beforeWrap < n) {
+      result.set(this.#buf.subarray(0, n - beforeWrap), beforeWrap);
     }
 
     return result;
