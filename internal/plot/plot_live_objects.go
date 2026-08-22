@@ -19,7 +19,7 @@ var _ = register(description{
 	layout: Scatter{
 		Name:   "live-objects",
 		Tags:   []tag{tagGC},
-		Title:  "Live Objects in Heap",
+		Title:  "Heap Objects",
 		Type:   "bar",
 		Events: "lastgc",
 		Layout: ScatterLayout{
@@ -29,11 +29,11 @@ var _ = register(description{
 		},
 		Subplots: []Subplot{
 			{
-				Name:    "live objects",
+				Name:    "live or unswept objects",
 				Unitfmt: "%{y:.4s}",
 				Color:   RGBString(255, 195, 128),
 			},
 		},
-		InfoText: `<i>Live objects</i> is <b>/gc/heap/objects</b>. It's the number of objects, live or unswept, occupying heap memory.`,
+		InfoText: `<i>Heap objects</i> is <b>/gc/heap/objects:objects</b>. It is the number of live or unswept objects occupying heap memory.`,
 	},
 })

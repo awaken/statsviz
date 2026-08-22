@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"net"
+	"log"
 	"net/http"
 	"os"
 
@@ -18,16 +18,21 @@ func main() {
 	go example.Work()
 
 	// Create the main listener and mux
-	l, err := net.Listen("tcp", ":8093")
+	l, err := example.Listen(8093)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 	m := cmux.New(l)
+	m.SetReadTimeout(example.ServerReadHeaderTimeout)
 	ws := http.NewServeMux()
 
 	// Fiber instance
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		ReadTimeout:  example.ServerReadTimeout,
+		WriteTimeout: example.ServerWriteTimeout,
+		IdleTimeout:  example.ServerIdleTimeout,
+	})
 
 	// Create statsviz server.
 	srv, err := statsviz.NewServer()
@@ -38,10 +43,23 @@ func main() {
 	app.Use("/debug/statsviz/", srv.Index())
 	ws.HandleFunc("/debug/statsviz/ws", srv.Ws())
 
-	fmt.Println("Point your browser to http://localhost:8093/debug/statsviz/")
+	fmt.Printf("Point your browser to %s\n", example.URL("http", 8093, "/debug/statsviz/"))
 
 	// Server start
-	go http.Serve(m.Match(cmux.HTTP1HeaderField("Upgrade", "websocket")), ws)
-	go app.Listener(m.Match(cmux.Any()))
-	m.Serve()
+	wsListener := m.Match(cmux.HTTP1HeaderField("Upgrade", "websocket"))
+	fiberListener := m.Match(cmux.Any())
+	wsServer := example.HTTPServer(8093, ws)
+	go func() {
+		if err := wsServer.Serve(wsListener); err != nil {
+			log.Fatalf("failed to serve WebSocket connections: %s", err)
+		}
+	}()
+	go func() {
+		if err := app.Listener(fiberListener); err != nil {
+			log.Fatalf("failed to serve Fiber connections: %s", err)
+		}
+	}()
+	if err := m.Serve(); err != nil {
+		log.Fatalf("failed to serve multiplexed connections: %s", err)
+	}
 }

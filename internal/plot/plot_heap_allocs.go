@@ -46,8 +46,7 @@ var _ = register(description{
 				Color:   RGBString(219, 68, 55),
 			},
 		},
-		InfoText: `
-<i>Allocations per second</i> is the rate of change, per second, of the cumulative <b>/gc/heap/allocs:objects</b> metric.
+		InfoText: `<i>Allocations per second</i> is the rate of change, per second, of the cumulative <b>/gc/heap/allocs:objects</b> metric.
 <i>Frees per second</i> is the rate of change, per second, of the cumulative <b>/gc/heap/frees:objects</b> metric.`,
 	},
 })

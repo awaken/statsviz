@@ -42,6 +42,17 @@ func rate[T uint64 | float64]() func(time.Time, T) float64 {
 	}
 }
 
+// approximateCleanupQueueLength subtracts cumulative execution counts from
+// enqueue counts. Cleanup runtime metrics snapshots are intentionally
+// inconsistent, so executed can briefly be greater than queued.
+func approximateCleanupQueueLength(queued, executed uint64) uint64 {
+	if executed >= queued {
+		return 0
+	}
+
+	return queued - executed
+}
+
 func goversion() string {
 	bnfo, ok := debug.ReadBuildInfo()
 	if ok {

@@ -16,7 +16,7 @@ var _ = register(description{
 		return func(_ time.Time, samples []metrics.Sample) any {
 			executed := samples[idx_gc_cleanups_executed_cleanups].Value.Uint64()
 			queued := samples[idx_gc_cleanups_queued_cleanups].Value.Uint64()
-			return []uint64{queued - executed}
+			return []uint64{approximateCleanupQueueLength(queued, executed)}
 		}
 	},
 	layout: Scatter{
@@ -34,7 +34,6 @@ var _ = register(description{
 			{Unitfmt: "%{y}", Type: "bar", Name: "queue size"},
 		},
 		InfoText: `Approximate length of the cleanup functions queue (created by runtime.AddCleanup).
-Its <i>/gc/cleanups/queued:cleanups</i> - <i>/gc/cleanups/executed:cleanups</i>.
-Useful for detecting slow cleanups holding up the queue.
-`},
+It is <i>/gc/cleanups/queued:cleanups</i> - <i>/gc/cleanups/executed:cleanups</i>.
+Useful for detecting slow cleanups holding up the queue.`},
 })

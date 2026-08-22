@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/kataras/iris/v12"
@@ -18,16 +19,22 @@ func main() {
 
 	// Need to run iris in a separate goroutine so we can start the dedicated
 	// http server for Statsviz.
-	go app.Listen(":8089")
+	go func() {
+		if err := app.Run(iris.Server(example.HTTPServer(8089, nil))); err != nil {
+			log.Fatalf("failed to start Iris server: %s", err)
+		}
+	}()
 
 	mux := http.NewServeMux()
 
 	// Register Statsviz handlers on the mux.
 	_ = statsviz.Register(mux)
 
-	fmt.Println("Point your browser to http://localhost:8088/debug/statsviz")
+	fmt.Printf("Point your browser to %s\n", example.URL("http", 8088, "/debug/statsviz"))
 
 	// NewHost puts the http server for statsviz under the control of iris but
 	// iris won't touch its handlers.
-	app.NewHost(&http.Server{Addr: ":8088", Handler: mux}).ListenAndServe()
+	if err := app.NewHost(example.HTTPServer(8088, mux)).ListenAndServe(); err != nil {
+		log.Fatalf("failed to start Statsviz server: %s", err)
+	}
 }

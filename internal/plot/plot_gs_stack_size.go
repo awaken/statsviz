@@ -18,7 +18,7 @@ var _ = register(description{
 	layout: Scatter{
 		Name:  "gc-stack-size",
 		Tags:  []tag{tagGC},
-		Title: "Goroutines stack starting size",
+		Title: "Goroutine Stack Starting Size",
 		Type:  "scatter",
 		Layout: ScatterLayout{
 			Yaxis: ScatterYAxis{
@@ -26,8 +26,8 @@ var _ = register(description{
 			},
 		},
 		Subplots: []Subplot{
-			{Name: "new goroutines stack size", Unitfmt: "%{y:.4s}B"},
+			{Name: "new goroutine stack size", Unitfmt: "%{y:.4s}B"},
 		},
-		InfoText: "Shows the stack size of new goroutines, uses <b>/gc/stack/starting-size:bytes</b>",
+		InfoText: "Shows the stack size of new goroutines. Uses <b>/gc/stack/starting-size:bytes</b>.",
 	},
 })

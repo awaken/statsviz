@@ -1,7 +1,7 @@
 # Runs the frontend tooling inside Docker. Run `make help` for the target list.
 
 IMAGE_TAG ?= statsviz-ui
-NODE_IMAGE ?= node:22-alpine
+NODE_IMAGE ?= node:24-alpine
 NPM_CACHE_VOLUME ?= statsviz-npm-cache
 PORT ?= 5173
 

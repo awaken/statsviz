@@ -17,6 +17,6 @@ func main() {
 	var ss statsviz.Server
 	ss.Register(http.DefaultServeMux)
 
-	fmt.Println("Point your browser to http://localhost:8079/debug/statsviz/")
-	log.Fatal(http.ListenAndServe(":8079", nil))
+	fmt.Printf("Point your browser to %s\n", example.URL("http", 8079, "/debug/statsviz/"))
+	log.Fatal(example.HTTPServer(8079, nil).ListenAndServe())
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v5"
@@ -28,8 +29,8 @@ func main() {
 	e.GET("/debug/statsviz/*", echo.WrapHandler(mux))
 
 	// Start server
-	fmt.Println("Point your browser to http://localhost:8082/debug/statsviz/")
-	if err := e.Start(":8082"); err != nil {
-		e.Logger.Error("failed", "err", err)
+	fmt.Printf("Point your browser to %s\n", example.URL("http", 8082, "/debug/statsviz/"))
+	if err := example.HTTPServer(8082, e).ListenAndServe(); err != nil {
+		log.Fatalf("failed to start server: %s", err)
 	}
 }

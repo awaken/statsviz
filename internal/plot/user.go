@@ -20,7 +20,12 @@ func (up UserPlot) Layout() any {
 	case (up.Scatter != nil) == (up.Heatmap != nil):
 		panic("userplot must be a timeseries or a heatmap")
 	case up.Scatter != nil:
-		return up.Scatter.Plot
+		layout := up.Scatter.Plot
+		// The public user-plot API has no category option.
+		if len(layout.Tags) == 0 {
+			layout.Tags = []string{tagMisc}
+		}
+		return layout
 	case up.Heatmap != nil:
 		return up.Heatmap.Plot
 	}

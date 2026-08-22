@@ -25,7 +25,7 @@ var _ = register(description{
 		Type:  "scatter",
 		Layout: ScatterLayout{
 			Yaxis: ScatterYAxis{
-				Title: "bytes",
+				Title: "threads",
 			},
 		},
 		Subplots: []Subplot{
@@ -34,6 +34,6 @@ var _ = register(description{
 				Unitfmt: "%{y}",
 			},
 		},
-		InfoText: "Shows the current count of live threads that are owned by the Go runtime. Uses <b>/sched/threads/total:threads</b>",
+		InfoText: "Shows the current count of live threads that are owned by the Go runtime. Uses <b>/sched/threads/total:threads</b>.",
 	},
 })

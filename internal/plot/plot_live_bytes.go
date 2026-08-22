@@ -21,7 +21,7 @@ var _ = register(description{
 	layout: Scatter{
 		Name:   "live-bytes",
 		Tags:   []tag{tagGC},
-		Title:  "Live Bytes in Heap",
+		Title:  "Heap Object Bytes",
 		Type:   "bar",
 		Events: "lastgc",
 		Layout: ScatterLayout{
@@ -31,11 +31,11 @@ var _ = register(description{
 		},
 		Subplots: []Subplot{
 			{
-				Name:    "live bytes",
+				Name:    "heap object bytes",
 				Unitfmt: "%{y:.4s}B",
 				Color:   RGBString(135, 182, 218),
 			},
 		},
-		InfoText: `<i>Live bytes</i> is <b>/gc/heap/allocs - /gc/heap/frees</b>. It's the number of bytes currently allocated (and not yet GC'ec) to the heap by the application.`,
+		InfoText: `<i>Heap object bytes</i> is <b>/gc/heap/allocs:bytes</b> - <b>/gc/heap/frees:bytes</b>. The result includes live objects and dead, unswept objects whose storage has not yet been freed by the GC.`,
 	},
 })

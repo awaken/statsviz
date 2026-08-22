@@ -23,6 +23,6 @@ func main() {
 		statsviz.SendFrequency(250*time.Millisecond),
 	)
 
-	log.Println("Point your browser to http://localhost:8092/foo/bar")
-	log.Fatal(http.ListenAndServe(":8092", mux))
+	log.Printf("Point your browser to %s", example.URL("http", 8092, "/foo/bar"))
+	log.Fatal(example.HTTPServer(8092, mux).ListenAndServe())
 }

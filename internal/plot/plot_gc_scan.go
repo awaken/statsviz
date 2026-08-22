@@ -50,11 +50,9 @@ var _ = register(description{
 				Type:    "bar",
 			},
 		},
-		InfoText: `
-This plot shows the amount of memory that is scannable by the GC.
-<i>scannable globals</i> is <b>/gc/scan/globals</b>, the total amount of global variable space that is scannable.
-<i>scannable heap</i> is <b>/gc/scan/heap</b>, the total amount of heap space that is scannable.
-<i>scanned stack</i> is <b>/gc/scan/stack</b>, the number of bytes of stack that were scanned last GC cycle.
-`,
+		InfoText: `This plot shows the amount of memory that is scannable by the GC.
+<i>scannable globals</i> is <b>/gc/scan/globals:bytes</b>, the total amount of global variable space that is scannable.
+<i>scannable heap</i> is <b>/gc/scan/heap:bytes</b>, the total amount of heap space that is scannable.
+<i>scanned stack</i> is <b>/gc/scan/stack:bytes</b>, the number of bytes of stack that were scanned last GC cycle.`,
 	},
 })

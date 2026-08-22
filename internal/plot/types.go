@@ -72,5 +72,6 @@ type (
 		YName string `json:"yname"`
 		YUnit string `json:"yunit"` // 'duration', 'bytes' or custom
 		ZName string `json:"zname"`
+		YMin  *float64 `json:"ymin,omitempty"`
 	}
 )

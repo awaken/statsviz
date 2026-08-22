@@ -222,13 +222,13 @@ Which plots are visible depends on:
 
 <img width="50%" alt="heap-details" src="https://github.com/arl/statsviz/raw/readme-docs/plots/heap-details.png">
 
-#### Live Bytes
+#### Heap Object Bytes
 
-<img width="50%" alt="live-bytes" src="https://github.com/arl/statsviz/raw/readme-docs/plots/live-bytes.png">
+<img width="50%" alt="heap object bytes" src="https://github.com/arl/statsviz/raw/readme-docs/plots/live-bytes.png">
 
-#### Live Objects
+#### Heap Objects
 
-<img width="50%" alt="live-objects" src="https://github.com/arl/statsviz/raw/readme-docs/plots/live-objects.png">
+<img width="50%" alt="heap objects" src="https://github.com/arl/statsviz/raw/readme-docs/plots/live-objects.png">
 
 #### Memory Classes
 

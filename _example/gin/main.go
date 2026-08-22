@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/gin-gonic/gin"
 
@@ -29,6 +30,8 @@ func main() {
 		index(context.Writer, context.Request)
 	})
 
-	fmt.Printf("Point your browser to http://localhost:8085/debug/statsviz/\n\n")
-	router.Run(":8085")
+	fmt.Printf("Point your browser to %s\n\n", example.URL("http", 8085, "/debug/statsviz/"))
+	if err := example.HTTPServer(8085, router).ListenAndServe(); err != nil {
+		log.Fatalf("failed to start server: %s", err)
+	}
 }

@@ -39,7 +39,7 @@ var _ = register(description{
 		},
 
 		InfoText: `Cumulative metrics are converted to rates by Statsviz so as to be more easily comparable and readable.
-<i>mutex wait</i> is the rate of change, per second, of <b>/sync/mutex/wait/total</b>, approximate cumulative time goroutines have spent blocked on a sync.Mutex or sync.RWMutex.
+<i>mutex wait</i> is the rate of change, per second, of <b>/sync/mutex/wait/total:seconds</b>, the approximate cumulative time goroutines have spent blocked on a sync.Mutex, sync.RWMutex, or runtime-internal lock.
 
 This metric is useful for identifying global changes in lock contention. Collect a mutex or block profile using the runtime/pprof package for more detailed contention data.`,
 	},

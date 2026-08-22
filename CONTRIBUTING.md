@@ -41,7 +41,7 @@ To build the production UI:
 
 If you don't want to install Node.js/npm on your machine, you can drive the
 whole frontend workflow through Docker using the `Makefile` in
-`internal/static/`. It builds a tiny image on top of `node:22-alpine` (see
+`internal/static/`. It builds a tiny image on top of `node:24-alpine` (see
 `internal/static/Dockerfile`) and runs everything as your host UID/GID, so
 files created in `node_modules/`, `dist/`, `dist.zip` and `package-lock.json`
 are owned by you and not root.

@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"net"
+	"log"
 	"net/http"
 
 	"github.com/fasthttp/router"
@@ -19,8 +19,12 @@ func main() {
 	go example.Work()
 
 	// Create the main listener and mux
-	l, _ := net.Listen("tcp", ":8083")
+	l, err := example.Listen(8083)
+	if err != nil {
+		log.Fatalf("failed to create listener: %s", err)
+	}
 	m := cmux.New(l)
+	m.SetReadTimeout(example.ServerReadHeaderTimeout)
 	ws := http.NewServeMux()
 
 	// fasthttp routers
@@ -37,8 +41,27 @@ func main() {
 	ws.HandleFunc("/debug/statsviz/ws", srv.Ws())
 
 	// Server start
-	go http.Serve(m.Match(cmux.HTTP1HeaderField("Upgrade", "websocket")), ws)
-	go fasthttp.Serve(m.Match(cmux.Any()), r.Handler)
-	fmt.Println("Point your browser to http://localhost:8083/debug/statsviz/")
-	m.Serve()
+	wsListener := m.Match(cmux.HTTP1HeaderField("Upgrade", "websocket"))
+	httpListener := m.Match(cmux.Any())
+	wsServer := example.HTTPServer(8083, ws)
+	fastHTTPServer := &fasthttp.Server{
+		Handler:      r.Handler,
+		ReadTimeout:  example.ServerReadTimeout,
+		WriteTimeout: example.ServerWriteTimeout,
+		IdleTimeout:  example.ServerIdleTimeout,
+	}
+	go func() {
+		if err := wsServer.Serve(wsListener); err != nil {
+			log.Fatalf("failed to serve WebSocket connections: %s", err)
+		}
+	}()
+	go func() {
+		if err := fastHTTPServer.Serve(httpListener); err != nil {
+			log.Fatalf("failed to serve HTTP connections: %s", err)
+		}
+	}()
+	fmt.Printf("Point your browser to %s\n", example.URL("http", 8083, "/debug/statsviz/"))
+	if err := m.Serve(); err != nil {
+		log.Fatalf("failed to serve multiplexed connections: %s", err)
+	}
 }

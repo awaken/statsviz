@@ -9,6 +9,12 @@ import (
 	example "github.com/arl/statsviz/_example"
 )
 
+const (
+	basicAuthUser     = "statsviz"
+	basicAuthPassword = "rocks"
+	basicAuthRealm    = ""
+)
+
 // basicAuth adds HTTP Basic Authentication to h.
 //
 // NOTE: This is just an example middleware to show how one can wrap statsviz
@@ -34,11 +40,11 @@ func main() {
 	srv, _ := statsviz.NewServer()
 
 	mux := http.NewServeMux()
-	mux.Handle("/debug/statsviz/", basicAuth(srv.Index(), "statsviz", "rocks", ""))
-	mux.HandleFunc("/debug/statsviz/ws", srv.Ws())
+	mux.Handle("/debug/statsviz/", basicAuth(srv.Index(), basicAuthUser, basicAuthPassword, basicAuthRealm))
+	mux.HandleFunc("/debug/statsviz/ws", basicAuth(srv.Ws(), basicAuthUser, basicAuthPassword, basicAuthRealm))
 
-	fmt.Println("Point your browser to http://localhost:8090/debug/statsviz/")
-	fmt.Println("Basic auth user:     statsviz")
-	fmt.Println("Basic auth password: rocks")
-	log.Fatal(http.ListenAndServe(":8090", mux))
+	fmt.Printf("Point your browser to %s\n", example.URL("http", 8090, "/debug/statsviz/"))
+	fmt.Printf("Basic auth user:     %s\n", basicAuthUser)
+	fmt.Printf("Basic auth password: %s\n", basicAuthPassword)
+	log.Fatal(example.HTTPServer(8090, mux).ListenAndServe())
 }

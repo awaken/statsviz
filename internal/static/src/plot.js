@@ -141,9 +141,13 @@ class Plot {
         let bucket;
         if (d.y == 0) {
           const yhigh = formatYUnit(d.data.custom_data[d.y]);
-          bucket = `(-Inf, ${yhigh})`;
+          if (hover.ymin == null) {
+            bucket = `(-Inf, ${yhigh})`;
+          } else {
+            bucket = `[${formatYUnit(hover.ymin)}, ${yhigh})`;
+          }
         } else if (d.y == d.data.custom_data.length - 1) {
-          const ylow = formatYUnit(d.data.custom_data[d.y]);
+          const ylow = formatYUnit(d.data.custom_data[d.y - 1]);
           bucket = `[${ylow}, +Inf)`;
         } else {
           const ylow = formatYUnit(d.data.custom_data[d.y - 1]);

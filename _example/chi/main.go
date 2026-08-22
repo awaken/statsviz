@@ -29,8 +29,8 @@ func main() {
 	mux := http.NewServeMux()
 	mux.Handle("/", r)
 
-	fmt.Println("Point your browser to http://localhost:8081/debug/statsviz/")
-	if err := http.ListenAndServe(":8081", mux); err != nil {
+	fmt.Printf("Point your browser to %s\n", example.URL("http", 8081, "/debug/statsviz/"))
+	if err := example.HTTPServer(8081, mux).ListenAndServe(); err != nil {
 		log.Fatalf("failed to start server: %s", err)
 	}
 }

@@ -40,11 +40,9 @@ var _ = register(description{
 			{Unitfmt: "%{y:.4s}B", Name: "mcache in-use"},
 			{Unitfmt: "%{y:.4s}B", Name: "mcache free"},
 		},
-		InfoText: `
-<i>Mspan in-use</i> is <b>/memory/classes/metadata/mspan/inuse</b>, the memory that is occupied by runtime mspan structures that are currently being used.
-<i>Mspan free</i> is <b>/memory/classes/metadata/mspan/free</b>, the memory that is reserved for runtime mspan structures, but not in-use.
-<i>Mcache in-use</i> is <b>/memory/classes/metadata/mcache/inuse</b>, the memory that is occupied by runtime mcache structures that are currently being used.
-<i>Mcache free</i> is <b>/memory/classes/metadata/mcache/free</b>, the memory that is reserved for runtime mcache structures, but not in-use.
-`,
+		InfoText: `<i>Mspan in-use</i> is <b>/memory/classes/metadata/mspan/inuse:bytes</b>, the memory that is occupied by runtime mspan structures that are currently being used.
+<i>Mspan free</i> is <b>/memory/classes/metadata/mspan/free:bytes</b>, the memory that is reserved for runtime mspan structures, but not in-use.
+<i>Mcache in-use</i> is <b>/memory/classes/metadata/mcache/inuse:bytes</b>, the memory that is occupied by runtime mcache structures that are currently being used.
+<i>Mcache free</i> is <b>/memory/classes/metadata/mcache/free:bytes</b>, the memory that is reserved for runtime mcache structures, but not in-use.`,
 	},
 })

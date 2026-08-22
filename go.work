@@ -1,0 +1,19 @@
+go 1.26.0
+
+use (
+	.
+	./_example/chi
+	./_example/default
+	./_example/echo
+	./_example/fasthttp
+	./_example/fiber
+	./_example/gin
+	./_example/gorilla
+	./_example/https
+	./_example/iris
+	./_example/middleware
+	./_example/mux
+	./_example/options
+	./_example/userplots
+	./_example/zerovalue
+)

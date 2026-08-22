@@ -10,22 +10,18 @@ var _ = register(description{
 		"/sched/pauses/stopping/gc:seconds",
 	},
 	getvalues: func() getvalues {
-		histfactor := 0
-		counts := [maxBuckets]uint64{}
+		var delta cumulativeHistogramDelta
 
 		return func(_ time.Time, samples []metrics.Sample) any {
 			hist := samples[idx_sched_pauses_stopping_gc_seconds].Value.Float64Histogram()
-			if histfactor == 0 {
-				histfactor = downsampleFactor(len(hist.Buckets), maxBuckets)
-			}
-
-			return downsampleCounts(hist, histfactor, counts[:])
+			return delta.next(hist)
 		}
 	},
 	layout: func(samples []metrics.Sample) Heatmap {
 		hist := samples[idx_sched_pauses_stopping_gc_seconds].Value.Float64Histogram()
-		histfactor := downsampleFactor(len(hist.Buckets), maxBuckets)
+		histfactor := downsampleFactor(hist, maxBuckets)
 		buckets := downsampleBuckets(hist, histfactor)
+		tickVals, tickText := durationHistogramTicks(buckets)
 
 		return Heatmap{
 			Name:       "stopping-pauses-gc",
@@ -39,19 +35,20 @@ var _ = register(description{
 			Hover: HeapmapHover{
 				YName: "stopping duration",
 				YUnit: "duration",
-				ZName: "pauses",
+				ZName: "pauses per interval",
 			},
 			Layout: HeatmapLayout{
 				YAxis: HeatmapYaxis{
 					Title:    "stopping duration",
 					TickMode: "array",
-					TickVals: []float64{6, 13, 20, 26, 33, 39.5, 46, 53, 60, 66, 73, 79, 86},
-					TickText: []float64{1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 5e-3, 1e-2, 5e-2, 1e-1, 5e-1, 1, 5, 10},
+					TickVals: tickVals,
+					TickText: tickText,
 				},
 			},
 			InfoText: `This heatmap shows the distribution of individual <b>GC-related</b> stop-the-world <i>stopping latencies</i>.
 This is the time it takes from deciding to stop the world until all Ps are stopped.
 During this time, some threads may be executing.
+Each column contains pauses observed since the preceding metrics sample.
 Uses <b>/sched/pauses/stopping/gc:seconds</b>.`,
 		}
 	},

@@ -42,6 +42,7 @@ var _ = register(description{
 		// No downsampling for the size classes histogram (factor=1) but we still
 		// need to adapt boundaries for plotly heatmaps.
 		buckets := downsampleBuckets(allocsBySize, 1)
+		minimumSize := allocsBySize.Buckets[0]
 
 		return Heatmap{
 			Name:       "size-classes",
@@ -56,8 +57,9 @@ var _ = register(description{
 				YName: "size class",
 				YUnit: "bytes",
 				ZName: "objects",
+				YMin:  &minimumSize,
 			},
-			InfoText: `This heatmap shows the distribution of size classes, using <b>/gc/heap/allocs-by-size</b> and <b>/gc/heap/frees-by-size</b>.`,
+			InfoText: `This heatmap shows the approximate distribution by size class of objects occupying heap memory. It subtracts <b>/gc/heap/frees-by-size:bytes</b> from <b>/gc/heap/allocs-by-size:bytes</b>; tiny allocations are represented by their containing tiny blocks.`,
 			Layout: HeatmapLayout{
 				YAxis: HeatmapYaxis{
 					Title:    "size class",

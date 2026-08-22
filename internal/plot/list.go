@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"runtime/debug"
 	"runtime/metrics"
 	"slices"
@@ -44,6 +45,9 @@ type List struct {
 	rtPlots   []runtimePlot
 	userPlots []UserPlot
 
+	mu      sync.Mutex // protects samples and stateful runtime plot getters
+	samples []metrics.Sample
+
 	once sync.Once // ensure Config is built once
 	cfg  *Config
 
@@ -61,7 +65,12 @@ func NewList(userPlots []UserPlot) (*List, error) {
 		return nil, fmt.Errorf("duplicate plot name %s", name)
 	}
 
-	return &List{reg: reg(), userPlots: userPlots}, nil
+	registry := reg()
+	return &List{
+		userPlots: userPlots,
+		samples:   registry.newSamples(),
+		reg:       registry,
+	}, nil
 }
 
 func (pl *List) enabledPlots() []runtimePlot {
@@ -115,7 +124,11 @@ func (pl *List) Config() *Config {
 // WriteTo writes into w a JSON object containing the data points for all plots
 // at the current instant. Return the number of written plots.
 func (pl *List) WriteTo(w io.Writer) (int64, error) {
-	samples := pl.reg.read()
+	pl.mu.Lock()
+	defer pl.mu.Unlock()
+
+	metrics.Read(pl.samples)
+	samples := pl.samples
 
 	// lastgc time series is used as source to represent garbage collection
 	// timestamps as vertical bars on certain plots.
@@ -135,9 +148,12 @@ func (pl *List) WriteTo(w io.Writer) (int64, error) {
 		up := &pl.userPlots[i]
 		switch {
 		case up.Scatter != nil:
-			vals := make([]float64, len(up.Scatter.Funcs))
+			vals := make([]any, len(up.Scatter.Funcs))
 			for i := range up.Scatter.Funcs {
-				vals[i] = up.Scatter.Funcs[i]()
+				value := up.Scatter.Funcs[i]()
+				if !math.IsNaN(value) && !math.IsInf(value, 0) {
+					vals[i] = value
+				}
 			}
 			m[up.Scatter.Plot.Name] = vals
 		case up.Heatmap != nil:

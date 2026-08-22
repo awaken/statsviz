@@ -13,14 +13,18 @@ const durVals = [6048e11, 864e11, 36e11, 6e10, 1e9, 1e6, 1e3, 1];
 
 // Formats a time duration provided in second.
 export const formatDuration = (sec) => {
-  let ns = sec * 1e9;
+  if (!Number.isFinite(sec)) return String(sec);
+  if (sec === 0) return "0s";
+
+  const sign = sec < 0 ? "-" : "";
+  const ns = Math.abs(sec) * 1e9;
   for (let i = 0; i < durUnits.length; i++) {
-    let inc = ns / durVals[i];
+    const inc = ns / durVals[i];
 
     if (inc < 1) continue;
-    return Math.round(inc) + durUnits[i];
+    return sign + Math.round(inc) + durUnits[i];
   }
-  return res.trim();
+  return sign + Math.round(ns) + "ns";
 };
 
 const bytesUnits = ["B", "KB", "MB", "GB", "TB", "PB", "EB"];
@@ -45,7 +49,5 @@ export const formatFunction = (unit) => {
       return formatBytes;
   }
   // Default formatting
-  return (y) => {
-    `${y} ${hover.yunit}`;
-  };
+  return (y) => `${y} ${unit}`;
 };

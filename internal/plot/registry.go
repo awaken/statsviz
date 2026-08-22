@@ -28,8 +28,6 @@ type registry struct {
 	allMetrics   map[string]bool // names of all known runtime/metrics metrics
 	metrics      []string
 	descriptions []description
-
-	samples []metrics.Sample // lazily built, only with the metrics we need
 }
 
 var reg = sync.OnceValue(func() *registry {
@@ -57,29 +55,21 @@ func (r *registry) mustidx(metric string) int {
 	return idx
 }
 
-func (r *registry) buildSamples() {
-	r.samples = make([]metrics.Sample, len(r.metrics))
-	for i := range r.samples {
-		r.samples[i].Name = r.metrics[i]
+func (r *registry) newSamples() []metrics.Sample {
+	samples := make([]metrics.Sample, len(r.metrics))
+	for i := range samples {
+		samples[i].Name = r.metrics[i]
 	}
-}
 
-func (r *registry) read() []metrics.Sample {
-	if r.samples == nil {
-		r.buildSamples()
-	}
-	metrics.Read(r.samples)
-
-	return r.samples
+	return samples
 }
 
 func (r *registry) register(desc description) {
 	// Histograms need special handling.
 	type heatmapLayoutFunc = func(samples []metrics.Sample) Heatmap
 	if buildLayout, ok := desc.layout.(heatmapLayoutFunc); ok {
-		// Rebuild samples to include the required metrics.
-		r.buildSamples()
-		samples := r.read()
+		samples := r.newSamples()
+		metrics.Read(samples)
 		desc.layout = buildLayout(samples)
 	}
 

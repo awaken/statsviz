@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -25,6 +26,8 @@ func main() {
 	mux := http.NewServeMux()
 	mux.Handle("/", r)
 
-	fmt.Println("Point your browser to http://localhost:8086/debug/statsviz/")
-	http.ListenAndServe(":8086", mux)
+	fmt.Printf("Point your browser to %s\n", example.URL("http", 8086, "/debug/statsviz/"))
+	if err := example.HTTPServer(8086, mux).ListenAndServe(); err != nil {
+		log.Fatalf("failed to start server: %s", err)
+	}
 }

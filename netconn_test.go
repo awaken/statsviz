@@ -16,6 +16,7 @@ import (
 	"net/netip"
 	"os"
 	"sync"
+	"testing"
 	"testing/synctest"
 	"time"
 )
@@ -117,6 +118,27 @@ func fakeNetPipe(s1ap, s2ap netip.AddrPort) (r, w *fakeNetConn) {
 	return c1, c2
 }
 
+func TestFakeNetConnClose(t *testing.T) {
+	closed, peer := fakeNetPipe(
+		netip.MustParseAddrPort("127.0.0.1:8000"),
+		netip.MustParseAddrPort("127.0.0.1:10000"),
+	)
+	if err := closed.Close(); err != nil {
+		t.Fatalf("Close() error = %v", err)
+	}
+
+	peer.loc.lock()
+	peerReadErr := peer.loc.readErr
+	peer.loc.unlock()
+	if peerReadErr != io.EOF {
+		t.Errorf("peer read error after Close() = %v, want %v", peerReadErr, io.EOF)
+	}
+
+	if n, err := closed.Write([]byte("x")); n != 0 || err != net.ErrClosed {
+		t.Errorf("Write() after Close() = (%d, %v), want (0, %v)", n, err, net.ErrClosed)
+	}
+}
+
 // A fakeNetConn is one endpoint of the connection created by fakeNetPipe.
 type fakeNetConn struct {
 	// local and remote connection halves.
@@ -183,9 +205,10 @@ func (c *fakeNetConn) Close() error {
 	c.loc.unlock()
 	// Remote half of the connection reads EOF after reading any remaining data.
 	c.rem.lock()
-	if c.rem.readErr != nil {
+	if c.rem.readErr == nil {
 		c.rem.readErr = io.EOF
 	}
+	c.rem.writeErr = net.ErrClosed
 	c.rem.unlock()
 	if c.autoWait {
 		synctest.Wait()

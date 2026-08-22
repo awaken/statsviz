@@ -9,7 +9,7 @@
 // Alternatively, you can register with [http.DefaultServeMux]
 // though you shouldn't do that in production:
 //
-//	ss := statsviz.NewServer()
+//	var ss statsviz.Server
 //	ss.Register(http.DefaultServeMux)
 //
 // By default, Statsviz is served at http://host:port/debug/statsviz/. This, and
@@ -27,7 +27,7 @@
 //
 // # Advanced usage:
 //
-// If you want more control over Statsviz HTTP handlers, for examples if:
+// If you want more control over Statsviz HTTP handlers, for example if:
 //   - you're using some HTTP framework
 //   - you want to place Statsviz handler behind some middleware
 //
@@ -57,8 +57,9 @@ import (
 )
 
 const (
-	defaultRoot         = "/debug/statsviz"
-	defaultSendInterval = time.Second
+	defaultRoot                  = "/debug/statsviz"
+	defaultSendInterval          = time.Second
+	defaultWebSocketWriteTimeout = 10 * time.Second
 )
 
 // RegisterDefault registers the Statsviz HTTP handlers on [http.DefaultServeMux].
@@ -95,16 +96,17 @@ type Server struct {
 	cancel  context.CancelFunc // terminate goroutines
 	clients *clients           // connected websocket clients
 
-	interval  time.Duration // interval between consecutive metrics emission
-	root      string        // HTTP path root
-	plots     *plot.List    // plots shown on the user interface
-	userPlots []plot.UserPlot
+	interval              time.Duration // interval between consecutive metrics emission
+	root                  string        // HTTP path root
+	webSocketWriteTimeout time.Duration // maximum duration of a WebSocket frame write
+	plots                 *plot.List    // plots shown on the user interface
+	userPlots             []plot.UserPlot
 }
 
 // NewServer constructs a new Statsviz Server with the provided options, or the
 // default settings.
 //
-// Note that once the server is created, its HTTP handlers needs to be registered
+// Note that once the server is created, its HTTP handlers need to be registered
 // with some HTTP server. You can either use the Register method or register yourself
 // the Index and Ws handlers.
 func NewServer(opts ...Option) (*Server, error) {
@@ -117,8 +119,9 @@ func NewServer(opts ...Option) (*Server, error) {
 
 func (s *Server) init(opts ...Option) error {
 	*s = Server{
-		interval: defaultSendInterval,
-		root:     defaultRoot,
+		interval:              defaultSendInterval,
+		root:                  defaultRoot,
+		webSocketWriteTimeout: defaultWebSocketWriteTimeout,
 	}
 
 	for _, opt := range opts {
@@ -135,7 +138,7 @@ func (s *Server) init(opts ...Option) error {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	s.cancel = cancel
-	s.clients = newClients(ctx, s.plots.Config())
+	s.clients = newClients(ctx, s.plots.Config(), s.webSocketWriteTimeout)
 
 	// Collect metrics.
 	go func() {
@@ -175,7 +178,9 @@ func (s *Server) Register(mux *http.ServeMux) {
 
 // Close releases all resources used by the Server.
 func (s *Server) Close() error {
-	s.cancel()
+	if s.cancel != nil {
+		s.cancel()
+	}
 	return nil
 }
 
@@ -187,9 +192,21 @@ type Option func(*Server) error
 func SendFrequency(intv time.Duration) Option {
 	return func(s *Server) error {
 		if intv <= 0 {
-			return fmt.Errorf("frequency must be a positive integer")
+			return fmt.Errorf("send interval must be positive")
 		}
 		s.interval = intv
+		return nil
+	}
+}
+
+// WebSocketWriteTimeout changes the maximum duration allowed for writing one
+// WebSocket configuration or metrics frame. The default is ten seconds.
+func WebSocketWriteTimeout(timeout time.Duration) Option {
+	return func(s *Server) error {
+		if timeout <= 0 {
+			return fmt.Errorf("WebSocket write timeout must be positive")
+		}
+		s.webSocketWriteTimeout = timeout
 		return nil
 	}
 }
@@ -203,10 +220,13 @@ func Root(path string) Option {
 	}
 }
 
-// TimeseriesPlot adds a new time series plot to Statsviz. This options can
+// TimeseriesPlot adds a new time series plot to Statsviz. This option can
 // be added multiple times.
 func TimeseriesPlot(tsp TimeSeriesPlot) Option {
 	return func(s *Server) error {
+		if tsp.timeseries == nil {
+			return ErrInvalidTimeSeriesPlot
+		}
 		s.userPlots = append(s.userPlots, plot.UserPlot{Scatter: tsp.timeseries})
 		return nil
 	}
@@ -214,7 +234,7 @@ func TimeseriesPlot(tsp TimeSeriesPlot) Option {
 
 // Index returns the index handler, which responds with the Statsviz user
 // interface HTML page. By default, the handler is served at the path specified
-// by the root. Use [WithRoot] to change the path.
+// by the root. Use [Root] to change the path.
 func (s *Server) Index() http.HandlerFunc {
 	prefix := s.root + "/"
 	dist := http.FileServerFS(static.Assets())
@@ -232,19 +252,25 @@ func parseBoolEnv(name string) bool {
 	return val
 }
 
-var debug = false
+func newDebugEnabled() func() bool {
+	return sync.OnceValue(func() bool {
+		return parseBoolEnv("STATSVIZ_DEBUG")
+	})
+}
+
+var debugEnabled = newDebugEnabled()
 
 func dbglog(format string, args ...any) {
-	if debug {
+	if debugEnabled() {
 		fmt.Fprintf(os.Stderr, "statsviz: "+format+"\n", args...)
 	}
 }
 
-var wsUpgrader = sync.OnceValue(func() websocket.Upgrader {
+func newWsUpgrader(debugEnabled func() bool) websocket.Upgrader {
 	var checkOrigin func(r *http.Request) bool
 
 	// Allow all origins for testing.
-	if debug = parseBoolEnv("STATSVIZ_DEBUG"); debug {
+	if debugEnabled() {
 		// passthrough
 		checkOrigin = func(r *http.Request) bool { return true }
 	}
@@ -254,6 +280,10 @@ var wsUpgrader = sync.OnceValue(func() websocket.Upgrader {
 		WriteBufferSize: 2048,
 		CheckOrigin:     checkOrigin,
 	}
+}
+
+var wsUpgrader = sync.OnceValue(func() websocket.Upgrader {
+	return newWsUpgrader(debugEnabled)
 })
 
 // Ws returns the WebSocket handler used by Statsviz to send application
