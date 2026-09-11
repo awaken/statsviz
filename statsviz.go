@@ -124,7 +124,10 @@ func (s *Server) init(opts ...Option) error {
 		webSocketWriteTimeout: defaultWebSocketWriteTimeout,
 	}
 
-	for _, opt := range opts {
+	for i, opt := range opts {
+		if opt == nil {
+			return fmt.Errorf("option %d is nil", i)
+		}
 		if err := opt(s); err != nil {
 			return err
 		}
@@ -290,6 +293,14 @@ var wsUpgrader = sync.OnceValue(func() websocket.Upgrader {
 // metrics. The underlying net.Conn is used to upgrade the HTTP server
 // connection to the WebSocket protocol.
 func (s *Server) Ws() http.HandlerFunc {
+	if s.clients == nil {
+		if err := s.init(); err != nil {
+			return func(w http.ResponseWriter, _ *http.Request) {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+		}
+	}
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		upgrader := wsUpgrader()
 		ws, err := upgrader.Upgrade(w, r, nil)

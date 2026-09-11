@@ -41,9 +41,10 @@ var reg = sync.OnceValue(func() *registry {
 	return reg
 })
 
+// mustidx preserves the generated index entry point; -1 means unavailable.
 func (r *registry) mustidx(metric string) int {
 	if !r.allMetrics[metric] {
-		panic(metric + ": unknown metric in " + goversion())
+		return -1
 	}
 
 	idx := slices.Index(r.metrics, metric)
@@ -65,6 +66,16 @@ func (r *registry) newSamples() []metrics.Sample {
 }
 
 func (r *registry) register(desc description) {
+	// Validate the whole dependency set before allocating indexes or layouts.
+	for _, metric := range desc.metrics {
+		if !r.allMetrics[metric] {
+			return
+		}
+	}
+	for _, metric := range desc.metrics {
+		r.mustidx(metric)
+	}
+
 	// Histograms need special handling.
 	type heatmapLayoutFunc = func(samples []metrics.Sample) Heatmap
 	if buildLayout, ok := desc.layout.(heatmapLayoutFunc); ok {
@@ -74,10 +85,6 @@ func (r *registry) register(desc description) {
 	}
 
 	r.descriptions = append(r.descriptions, desc)
-
-	for _, metric := range desc.metrics {
-		r.mustidx(metric)
-	}
 }
 
 func mustidx(metric string) int {

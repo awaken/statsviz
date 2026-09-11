@@ -74,9 +74,9 @@ class Plot {
 
   matches(query) {
     if (!query) return true;
-    if (!this.#cfg.metrics) return false;
     const q = query.toLowerCase();
-    return this.#cfg.metrics.some((m) => m.toLowerCase().includes(q));
+    const fields = [this.#cfg.name, this.#cfg.title, ...(this.#cfg.metrics || [])];
+    return fields.some((field) => field.toLowerCase().includes(q));
   }
 
   setVisible(visible) {

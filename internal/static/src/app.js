@@ -45,14 +45,12 @@ export const connect = () => {
       plotMgr = new PlotManager(cfg);
       statsMgr = new StatsManager(600, cfg);
 
-      initNav(() => {
-        drawPlots(false);
-      });
+      initNav(drawPlots);
     },
     // onData
     (msg) => {
       statsMgr.pushData(msg);
-      drawPlots(true);
+      drawPlots(false);
     }
   );
 };

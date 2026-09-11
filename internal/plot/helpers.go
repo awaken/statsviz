@@ -1,9 +1,6 @@
 package plot
 
-import (
-	"runtime/debug"
-	"time"
-)
+import "time"
 
 // delta returns a function that computes the delta between successive calls.
 func delta[T uint64 | float64]() func(T) T {
@@ -51,13 +48,4 @@ func approximateCleanupQueueLength(queued, executed uint64) uint64 {
 	}
 
 	return queued - executed
-}
-
-func goversion() string {
-	bnfo, ok := debug.ReadBuildInfo()
-	if ok {
-		return bnfo.GoVersion
-	}
-
-	return "<unknown version>"
 }

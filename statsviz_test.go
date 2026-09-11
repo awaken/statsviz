@@ -417,3 +417,49 @@ func TestZeroValueServerClose(t *testing.T) {
 		t.Fatalf("Close() error = %v", err)
 	}
 }
+
+func TestZeroValueServerWebSocket(t *testing.T) {
+	var srv Server
+	t.Cleanup(func() { _ = srv.Close() })
+
+	httpServer := httptest.NewServer(srv.Ws())
+	defer httpServer.Close()
+	u, err := url.Parse(httpServer.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	u.Scheme = "ws"
+	dialer := websocket.Dialer{HandshakeTimeout: time.Second}
+	ws, _, err := dialer.Dial(u.String(), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ws.Close()
+	if err := ws.SetReadDeadline(time.Now().Add(time.Second)); err != nil {
+		t.Fatal(err)
+	}
+
+	var cfg struct {
+		Event string `json:"event"`
+	}
+	if err := ws.ReadJSON(&cfg); err != nil {
+		t.Fatal(err)
+	}
+	if cfg.Event != "config" {
+		t.Fatalf("first WebSocket event = %q; want config", cfg.Event)
+	}
+}
+
+func TestNewServerRejectsNilOption(t *testing.T) {
+	var option Option
+	server, err := NewServer(option)
+	if err == nil {
+		if server != nil {
+			_ = server.Close()
+		}
+		t.Fatal("NewServer accepted a nil option")
+	}
+	if server != nil {
+		t.Fatalf("NewServer returned server %#v with error %v", server, err)
+	}
+}
