@@ -1,3 +1,14 @@
+v0.8.2 / 2026-09-11
+==============
+  * Merge upstream arl/statsviz through aed7978.
+  * Apply Flower branding to the UI and README.
+  * Upgrade Plotly to 4.0.0 and reduce embedded assets by 37%.
+  * Preserve histogram bounds, plot-name search, and redraw timing.
+  * Improve server initialization, WebSocket handling, runtime metric
+    compatibility, and custom plot validation.
+  * Support CGO-disabled builds; require Go 1.26 or newer.
+  * Run GitHub workflows on demand only.
+
 v0.8.1 / 2026-07-04
 ==============
   * Bump dependencies:
