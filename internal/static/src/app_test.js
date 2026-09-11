@@ -34,7 +34,6 @@ async function loadApp() {
     },
     "./socket.js": { default: WebSocketClient },
     "./utils.js": { buildWebsocketURI: () => "ws://example/ws" },
-    "bootstrap/dist/js/bootstrap.min.js": {},
   }, {
     requestAnimationFrame: (fn) => {
       frames.push(fn);

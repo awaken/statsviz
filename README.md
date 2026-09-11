@@ -1,6 +1,6 @@
 <div align="center">
- <a href="https://github.com/arl/statsviz" title="Statsviz's Github repository.">
-    <img src="https://raw.githubusercontent.com/arl/statsviz/readme-docs/logo.png?sanitize=true" width="100" height="auto"/>
+ <a href="https://github.com/awaken/statsviz" title="Flower Statsviz repository.">
+    <img src="internal/static/public/logo.svg" alt="Flower" width="200" height="auto"/>
  </a>
 <br>
 <br>

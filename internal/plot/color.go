@@ -6,6 +6,7 @@ import (
 	"image/color"
 )
 
+// RGBString returns a CSS/Plotly-valid color string.
 func RGBString(r, g, b uint8) string {
 	return fmt.Sprintf("rgb(%d,%d,%d)", r, g, b)
 }

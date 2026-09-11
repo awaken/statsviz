@@ -48,9 +48,13 @@ func TestExamples(t *testing.T) {
 	p := testscript.Params{
 		Dir: "testdata",
 		Setup: func(env *testscript.Env) error {
-			// We want to run scripts with the local version of Statsviz.
-			// Provide scripts with statsviz root dir so we can use a
-			// 'go mod -edit replace' directive.
+			// We want to run scripts with the local version of Statsviz. So
+			// each script will copy the code it needs (typically main.go and
+			// go.mod) in its own temp directory created by testscript and will
+			// use a 'go mod -edit replace' directive to point to statsviz
+			// source code (this repo).
+			//
+			// The script will look the path in $STATSVIZ_ROOT.
 			wd, err := os.Getwd()
 			if err != nil {
 				return err
