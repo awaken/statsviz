@@ -1,20 +1,13 @@
 import { Plot, createVerticalLines } from "./plot.js";
-import Plotly from "plotly.js-cartesian-dist";
-
-function debounce(fn, delay) {
-  let timer = null;
-  return function () {
-    const context = this;
-    const args = arguments;
-    clearTimeout(timer);
-    timer = setTimeout(() => fn.apply(context, args), delay);
-  };
-}
 
 export default class PlotManager {
   #shapesCache;
   #lastGcEnabled;
   #staggerHandle = null;
+  #resizeHandle = null;
+  #resizeTimer = null;
+  #resizeListener;
+  #disposed = false;
 
   constructor(config) {
     this.container = document.getElementById("plots");
@@ -23,14 +16,34 @@ export default class PlotManager {
     this.#lastGcEnabled = null;
     this.#attach();
 
-    window.addEventListener(
-      "resize",
-      debounce(() => {
+    this.#resizeListener = () => {
+      if (this.#disposed) return;
+      clearTimeout(this.#resizeTimer);
+      this.#resizeTimer = setTimeout(() => {
+        this.#resizeTimer = null;
         this.#resizeAll();
-      }, 100)
-    );
+      }, 100);
+    };
+    window.addEventListener("resize", this.#resizeListener);
+    this.#resizeHandle = requestAnimationFrame(() => {
+      this.#resizeHandle = null;
+      this.#resizeAll();
+    });
+  }
 
-    requestAnimationFrame(() => this.#resizeAll());
+  // Reconnect replaces the manager; release every resource owned by this one.
+  dispose() {
+    if (this.#disposed) return;
+    this.#disposed = true;
+    window.removeEventListener("resize", this.#resizeListener);
+    clearTimeout(this.#resizeTimer);
+    if (this.#resizeHandle !== null) cancelAnimationFrame(this.#resizeHandle);
+    if (this.#staggerHandle !== null) cancelAnimationFrame(this.#staggerHandle);
+    this.#resizeTimer = this.#resizeHandle = this.#staggerHandle = null;
+    this.plots.forEach(plot => plot.dispose());
+    this.plots = [];
+    this.#shapesCache.clear();
+    this.container = null;
   }
 
   #attach() {
@@ -47,6 +60,7 @@ export default class PlotManager {
   }
 
   update(data, gcEnabled, timeRange, force = false) {
+    if (this.#disposed || !data.times.length) return;
     // Create GC vertical lines - only if needed.
     const shapes = new Map();
     if (gcEnabled) {
@@ -94,6 +108,7 @@ export default class PlotManager {
     let index = 0;
 
     const processBatch = () => {
+      if (this.#disposed) return;
       const start = performance.now();
       // Process plots for up to 12ms per frame to leave time for UI
       while (index < visiblePlots.length && performance.now() - start < 12) {
@@ -112,6 +127,7 @@ export default class PlotManager {
   }
 
   #resizeAll() {
+    if (this.#disposed) return;
     this.plots.forEach((p) => {
       const gd = document.getElementById(p.name());
       // We're being super defensive here to ensure that the div is

@@ -29,12 +29,14 @@ async function loadApp() {
     "./nav.js": {
       gcEnabled: true,
       initNav: (fn) => { navUpdate = fn; },
+      updateVisibility() {},
       running: true,
       timerange: 60,
     },
     "./socket.js": { default: WebSocketClient },
     "./utils.js": { buildWebsocketURI: () => "ws://example/ws" },
   }, {
+    document: {getElementById: () => null},
     requestAnimationFrame: (fn) => {
       frames.push(fn);
       return frames.length;

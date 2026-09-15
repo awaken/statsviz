@@ -26,6 +26,7 @@ const plotsDiv = document.getElementById("plots");
 
 class Plot {
   #htmlElt;
+  #disposed = false;
   #plotlyLayout;
   #plotlyConfig;
   #lastData;
@@ -104,17 +105,20 @@ class Plot {
   }
 
   setVisible(visible) {
+    if (this.#disposed) return;
     this.#htmlElt.hidden = !visible;
   }
 
   isVisible() {
-    return !this.#htmlElt.hidden;
+    return !this.#disposed && !this.#htmlElt.hidden;
   }
 
   createElement(div) {
+    if (this.#disposed) return;
     this.#htmlElt = div;
 
     this.#observer = new IntersectionObserver((entries) => {
+      if (this.#disposed) return;
       entries.forEach((entry) => {
         this.#inViewport = entry.isIntersecting;
         if (this.#inViewport) {
@@ -132,17 +136,42 @@ class Plot {
     // Pass a single data with no data to create an empty plot (this removes
     // the 'bad time formatting' warning at startup).
 
-    Plotly.newPlot(
+    this.#render(Plotly.newPlot(
       this.#htmlElt,
       this.#lastData,
       this.#plotlyLayout,
       this.#plotlyConfig,
-    );
+    ));
 
     this.#htmlElt.infoText = this.#cfg.infoText
       .split("\n")
       .map((line) => `<p>${line}</p>`)
       .join("");
+  }
+
+  dispose() {
+    if (this.#disposed) return;
+    this.#disposed = true;
+    this.#observer?.disconnect();
+    this.#observer = null;
+    if (this.#htmlElt) {
+      Plotly.purge(this.#htmlElt);
+      this.#htmlElt.remove();
+    }
+    this.#htmlElt = null;
+    this.#lastData = this.#dataTemplate = this.#heatmapHoverText = null;
+    this.#plotlyLayout = this.#plotlyConfig = null;
+  }
+
+  // Plotly may finish initializing after disposal; purge that late result too.
+  #render(result) {
+    const element = this.#htmlElt;
+    Promise.resolve(result).then(() => {
+      if (this.#disposed) Plotly.purge(element);
+    }, err => {
+      if (this.#disposed) Plotly.purge(element);
+      else console.error("Statsviz plot failed", err);
+    });
   }
 
   #hovertextGrid(nCols) {
@@ -182,6 +211,7 @@ class Plot {
   }
 
   update(xrange, data, shapes, force) {
+    if (this.#disposed) return;
     this.#lastData = this.#extractData(data);
     this.#updateCount++;
     if (
@@ -218,6 +248,7 @@ class Plot {
   }
 
   maximize() {
+    if (this.#disposed) return;
     this.#maximized = true;
     const plotsDiv = document.getElementById("plots", this.#maximized);
 
@@ -232,6 +263,7 @@ class Plot {
   }
 
   minimize() {
+    if (this.#disposed) return;
     this.#maximized = false;
 
     this.#plotlyLayout = newLayoutObject(this.#cfg, this.#maximized);
@@ -244,6 +276,7 @@ class Plot {
   }
 
   resize() {
+    if (this.#disposed) return;
     this.updateCachedWidth();
     const layoutUpdate = { width: this.#cachedWidth };
     if (this.#maximized) {
@@ -252,10 +285,11 @@ class Plot {
     } else {
       layoutUpdate.height = defaultPlotHeight;
     }
-    Plotly.relayout(this.#htmlElt, layoutUpdate);
+    this.#render(Plotly.relayout(this.#htmlElt, layoutUpdate));
   }
 
   updateCachedWidth() {
+    if (this.#disposed) return;
     if (this.#maximized) {
       this.#cachedWidth = plotsDiv.clientWidth;
     } else {
@@ -264,15 +298,17 @@ class Plot {
   }
 
   #react() {
-    Plotly.react(
+    if (this.#disposed) return;
+    this.#render(Plotly.react(
       this.#htmlElt,
       this.#lastData,
       this.#plotlyLayout,
       this.#plotlyConfig,
-    );
+    ));
   }
 
   updateTheme() {
+    if (this.#disposed) return;
     const mode = theme.getThemeMode();
     const { paper_bgcolor, plot_bgcolor, font_color } = themeColors[mode];
 
@@ -280,11 +316,11 @@ class Plot {
     this.#cfg.layout.plot_bgcolor = plot_bgcolor;
     this.#cfg.layout.font_color = font_color;
 
-    Plotly.relayout(this.#htmlElt, {
+    this.#render(Plotly.relayout(this.#htmlElt, {
       paper_bgcolor: paper_bgcolor,
       plot_bgcolor: plot_bgcolor,
       "font.color": font_color,
-    });
+    }));
   }
 }
 

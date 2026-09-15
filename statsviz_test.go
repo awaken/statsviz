@@ -463,3 +463,17 @@ func TestNewServerRejectsNilOption(t *testing.T) {
 		t.Fatalf("NewServer returned server %#v with error %v", server, err)
 	}
 }
+
+func TestRootRejectsAmbiguousPaths(t *testing.T) {
+	for _, path := range []string{"relative", "example.com/x", "/x?y", "/x#y", "/a//b", "/a/../b", "/a/./b", "/x%2fy", "/x\\y", "/x y", "/{path}", "/x\n", string([]byte{'/', 0xff})} {
+		t.Run(path, func(t *testing.T) {
+			srv, err := NewServer(Root(path))
+			if srv != nil {
+				t.Cleanup(func() { _ = srv.Close() })
+			}
+			if err == nil {
+				t.Errorf("ambiguous root %q accepted", path)
+			}
+		})
+	}
+}

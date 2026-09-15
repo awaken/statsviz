@@ -1,3 +1,11 @@
+v0.8.3 / 2026-09-16
+==============
+  * Select history and events by timestamp at every sampling frequency.
+  * Bound browser history memory and show when limits shorten the range.
+  * Reset history after reconnects or backward server clock changes.
+  * Release plot resources, observers, listeners, and pending work on reconnect.
+  * Reject ambiguous UI root paths before server initialization.
+
 v0.8.2 / 2026-09-11
 ==============
   * Merge upstream arl/statsviz through aed7978.

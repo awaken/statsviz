@@ -150,6 +150,13 @@ Each plot belongs to one or more categories. The category selector allows you to
 
 Use the time range selector to define the visualized time span.
 
+History uses sample timestamps, independent of `SendFrequency`. Reconnecting or
+moving the server clock backwards starts a new history. The browser retains up
+to ten minutes, bounded by 60,000 samples and 2,000,000 numeric values (16 MB for
+history buffers, excluding plotting overhead). At unusually high rates or with
+many custom series, a notice identifies shortened history. Events follow the
+selected time range. Plot resources are released before reconnect replacement.
+
 ##### Show/Hide GC events
 
 <img alt="menu-gc-events" src="https://github.com/arl/statsviz/raw/readme-docs/menu-gc-events.png">

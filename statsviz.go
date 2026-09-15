@@ -45,10 +45,13 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/gorilla/websocket"
 
@@ -214,11 +217,19 @@ func WebSocketWriteTimeout(timeout time.Duration) Option {
 	}
 }
 
-// Root changes the root path of the Statsviz user interface.
-// The default is "/debug/statsviz".
-func Root(path string) Option {
+// Root changes the UI path (default "/debug/statsviz"). A trailing slash is
+// removed. Empty and "/" select the HTTP root. Other paths must be absolute,
+// clean, unescaped literals without queries, fragments or ServeMux wildcards.
+func Root(root string) Option {
 	return func(s *Server) error {
-		s.root = strings.TrimSuffix(path, "/")
+		clean := strings.TrimSuffix(root, "/")
+		if !utf8.ValidString(root) || strings.ContainsAny(root, "?#{%}\\") ||
+			strings.IndexFunc(root, func(r rune) bool { return unicode.IsSpace(r) || unicode.IsControl(r) }) >= 0 ||
+			clean != "" && (!strings.HasPrefix(clean, "/") || path.Clean(clean) != clean) ||
+			strings.Contains(root, "//") {
+			return fmt.Errorf("statsviz root must be a clean absolute literal path: %q", root)
+		}
+		s.root = clean
 		return nil
 	}
 }
