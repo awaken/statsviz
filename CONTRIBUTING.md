@@ -33,8 +33,8 @@ To bootstrap the UI for development:
 
 To build the production UI:
  - cd to `internal/static`
- - run `npm run build`
- - run `./scripts/zip.sh`
+ - prepare the Docker toolchain and dependency cache below
+ - run `make release RELEASE_IMAGE="$release_image"`
  - only commit `dist.zip`. `dist` directory is ignored.
 
 ### Building the UI without installing Node.js (Docker)
@@ -50,10 +50,10 @@ Common targets (run from `internal/static/`):
 
  - `make dev` — start the Vite dev server on http://localhost:5173. Override
    the port with `PORT=3000 make dev`.
- - `make build` — `npm install` + `npm run build`.
+ - `make build` — `npm ci` + `npm run build`.
  - `make zip` — build and regenerate `dist.zip`.
- - `make release` — clean build: removes `dist/` and `dist.zip`, then rebuilds
-   from scratch and zips (mirrors `scripts/release.sh`).
+ - `make release RELEASE_IMAGE="$release_image"` — offline clean build from
+   the lockfile in an immutable toolchain image, then deterministic packaging.
  - `make install` — `npm install` only.
  - `make shell` — open an interactive shell in the container.
  - `make clean` / `make distclean` — remove build artifacts / also drop the
@@ -69,9 +69,29 @@ make run CMD="npm ls plotly.js-cartesian-dist"
 make run CMD="npx --yes npm-check-updates"
 ```
 
-The Docker image is cached (rebuilt only when `Dockerfile` or
-`docker-entrypoint.sh` change), and npm's cache is preserved across runs in a
-named Docker volume (`statsviz-npm-cache`), so repeat commands are fast.
+Every `image` prerequisite runs `docker build`; Docker reuses unchanged layers.
+Changes to `IMAGE_TAG` or `NODE_IMAGE` and deleted images cannot be hidden by a
+local stamp. The npm cache remains in the named `statsviz-npm-cache` volume.
+
+Prepare a release toolchain and its lockfile cache on the build machine:
+
+```sh
+make image
+release_image=$(docker image inspect --format '{{.Id}}' statsviz-ui)
+make run CMD="npm ci --no-audit --no-fund"
+make release RELEASE_IMAGE="$release_image"
+```
+
+Record the complete image digest with the release and retain that image. Release
+runs use `--pull=never --network=none`; a missing image or cache fails instead of
+fetching new inputs. Digest-pinned repository references also work. Reuse the
+same image, architecture, source tree, lockfile and dependency cache to reproduce
+an archive. The development `NODE_IMAGE` tag does not select the release image.
+
+`npm ci` preserves the lockfile. ZIP entries have sorted paths, UTC timestamps
+fixed at 1980-01-01, mode 0644 and no host extra fields. Source files are not
+modified. Packaging atomically replaces `dist.zip` only after success. Run
+`npm test` and `sh scripts/make_test.sh` for build-tool regressions.
 
 
 ### Bumping npm dependencies
@@ -83,7 +103,7 @@ To bump all dependencies to the latest **minor/patch** versions allowed by the
 cd internal/static
 make run CMD="npm update"
 make run CMD="npm outdated"   # sanity check what's still behind (major bumps)
-make release                  # rebuild dist/ and dist.zip
+make release RELEASE_IMAGE="$release_image"  # rebuild dist/ and dist.zip
 ./scripts/checkzip.sh         # verify dist.zip is up to date
 ```
 
@@ -92,7 +112,7 @@ To also bump **major** versions, use `npm-check-updates`:
 ```sh
 make run CMD="npx --yes npm-check-updates -u"
 make run CMD="npm install"
-make release
+make release RELEASE_IMAGE="$release_image"
 ```
 
 Then commit `package.json`, `package-lock.json` and the regenerated `dist.zip`.
@@ -109,8 +129,8 @@ in the final binary, the `dist` directory is zipped into `dist.zip`. Use
 ## `STATSVIZ_DEBUG`
 
 Declare `STATSVIZ_DEBUG=1` environment variable when you develop in order to:
- - print websocket errors on standard output.
- - bypasses CORS checks
+ - print WebSocket errors on standard error.
+ - bypass WebSocket origin checks
 
 Obviously, this is not recommended for production use!
 

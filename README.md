@@ -177,94 +177,41 @@ Pause or resume the plot updates.
 
 ### Plots
 
-Which plots are visible depends on:
- - your Go version,since some plots are only available in newer versions.
- - what plot categories are currently selected. By default all plots are shown.
+Plots are registered only when their required runtime metrics are available.
+The Go version, CGO build setting and selected categories determine visibility.
+The CGO plot is absent with `CGO_ENABLED=0`; goroutine details vary by Go version.
 
-#### Allocation and Free Rate
+| Plot ID | Display title |
+| --- | --- |
+| `alloc-free-rate` | Heap Allocation & Free Rates |
+| `cgo` | CGO Calls |
+| `cpu-gc` | CPU (Garbage Collector) |
+| `cpu-overall` | CPU (Overall) |
+| `cpu-scavenger` | CPU (Scavenger) |
+| `garbage collection` | GC Memory Summary |
+| `gc-cleanups` | GC Cleanups Queue |
+| `gc-cycles` | Completed GC Cycles |
+| `gc-finalizers` | GC Finalizers Queue |
+| `gc-scan` | GC Scan |
+| `gc-stack-size` | Goroutine Stack Starting Size |
+| `goroutines` | Goroutines |
+| `heap (details)` | Heap (details) |
+| `live-bytes` | Heap Object Bytes |
+| `live-objects` | Heap Objects |
+| `memory-classes` | Memory classes |
+| `mspan-mcache` | MSpan/MCache |
+| `mutex-wait` | Mutex wait time |
+| `runnable-time` | Time Goroutines Spend in 'Runnable' state |
+| `size-classes` | Size Classes |
+| `stopping-pauses-gc` | Stop-the-world Stopping Latencies (GC) |
+| `stopping-pauses-other` | Stop-the-world Stopping Latencies (Other) |
+| `threads` | Threads |
+| `total-pauses-gc` | Stop-the-world Pause Latencies (GC) |
+| `total-pauses-other` | Stop-the-world Pause Latencies (Other) |
 
-<img width="50%" alt="alloc-free-rate" src="https://github.com/arl/statsviz/raw/readme-docs/plots/alloc-free-rate.png">
-
-#### CGO Calls
-
-<img width="50%" alt="cgo" src="https://github.com/arl/statsviz/raw/readme-docs/plots/cgo.png">
-
-#### CPU (GC)
-
-<img width="50%" alt="cpu-gc" src="https://github.com/arl/statsviz/raw/readme-docs/plots/cpu-gc.png">
-
-#### CPU (Overall)
-
-<img width="50%" alt="cpu-overall" src="https://github.com/arl/statsviz/raw/readme-docs/plots/cpu-overall.png">
-
-#### CPU (Scavenger)
-
-<img width="50%" alt="cpu-scavenger" src="https://github.com/arl/statsviz/raw/readme-docs/plots/cpu-scavenger.png">
-
-#### Garbage Collection
-
-<img width="50%" alt="garbage-collection" src="https://github.com/arl/statsviz/raw/readme-docs/plots/garbage-collection.png">
-
-#### GC Cycles
-
-<img width="50%" alt="gc-cycles" src="https://github.com/arl/statsviz/raw/readme-docs/plots/gc-cycles.png">
-
-#### GC Pauses
-
-<img width="50%" alt="gc-pauses" src="https://github.com/arl/statsviz/raw/readme-docs/plots/gc-pauses.png">
-
-#### GC Scan
-
-<img width="50%" alt="gc-scan" src="https://github.com/arl/statsviz/raw/readme-docs/plots/gc-scan.png">
-
-#### GC Stack Size
-
-<img width="50%" alt="gc-stack-size" src="https://github.com/arl/statsviz/raw/readme-docs/plots/gc-stack-size.png">
-
-#### Goroutines
-
-<img width="50%" alt="goroutines" src="https://github.com/arl/statsviz/raw/readme-docs/plots/goroutines.png">
-
-#### Heap (Details)
-
-<img width="50%" alt="heap-details" src="https://github.com/arl/statsviz/raw/readme-docs/plots/heap-details.png">
-
-#### Heap Object Bytes
-
-<img width="50%" alt="heap object bytes" src="https://github.com/arl/statsviz/raw/readme-docs/plots/live-bytes.png">
-
-#### Heap Objects
-
-<img width="50%" alt="heap objects" src="https://github.com/arl/statsviz/raw/readme-docs/plots/live-objects.png">
-
-#### Memory Classes
-
-<img width="50%" alt="memory-classes" src="https://github.com/arl/statsviz/raw/readme-docs/plots/memory-classes.png">
-
-#### MSpan/MCache
-
-<img width="50%" alt="mspan-mcache" src="https://github.com/arl/statsviz/raw/readme-docs/plots/mspan-mcache.png">
-
-#### Mutex Wait
-
-<img width="50%" alt="mutex-wait" src="https://github.com/arl/statsviz/raw/readme-docs/plots/mutex-wait.png">
-
-#### Runnable Time
-
-<img width="50%" alt="runnable-time" src="https://github.com/arl/statsviz/raw/readme-docs/plots/runnable-time.png">
-
-#### Scheduling Events
-
-<img width="50%" alt="sched-events" src="https://github.com/arl/statsviz/raw/readme-docs/plots/sched-events.png">
-
-#### Size Classes
-
-<img width="50%" alt="size-classes" src="https://github.com/arl/statsviz/raw/readme-docs/plots/size-classes.png">
-
-#### GC Pauses
-
-<img width="50%" alt="gc-pauses" src="https://github.com/arl/statsviz/raw/readme-docs/plots/gc-pauses.png">
-
+The four pause plots distinguish total pauses from the time spent stopping
+goroutines, and garbage-collector pauses from other stop-the-world events.
+There is no separate Scheduling Events plot; use Runnable Time and Goroutines.
 
 ### User Plots
 

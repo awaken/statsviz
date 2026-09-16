@@ -1,3 +1,11 @@
+v0.8.4 / 2026-09-16
+==============
+  * Make asset archives reproducible with fixed metadata and atomic replacement.
+  * Build releases offline from the lockfile in a pinned toolchain image.
+  * Use Docker layer caching without stale local image stamps.
+  * Add packaging and build-tool regression tests.
+  * Update the plot catalog and debug documentation.
+
 v0.8.3 / 2026-09-16
 ==============
   * Select history and events by timestamp at every sampling frequency.

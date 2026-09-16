@@ -7,7 +7,7 @@
     "dev": "vite",
     "preview": "vite preview",
     "build": "vite build",
-    "test": "node --experimental-vm-modules --test src/*_test.js"
+    "test": "node --experimental-vm-modules --test src/*_test.js scripts/*_test.js"
   },
   "devDependencies": {
     "vite": "^8.2.2"

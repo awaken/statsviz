@@ -3,14 +3,12 @@
 IMAGE_TAG ?= statsviz-ui
 NODE_IMAGE ?= node:24-alpine
 NPM_CACHE_VOLUME ?= statsviz-npm-cache
+# Complete toolchain image, including Node, npm and zip. Release requires a digest.
+RELEASE_IMAGE ?=
 PORT ?= 5173
 
 UID := $(shell id -u)
 GID := $(shell id -g)
-
-# Stamp file used to cache the `docker build` step so we only rebuild the
-# image when the Dockerfile or entrypoint change.
-IMAGE_STAMP := .docker-image-stamp
 
 # Common `docker run` flags. `docker run` argument order is:
 #   docker run [OPTIONS] IMAGE [COMMAND] [ARG...]
@@ -28,11 +26,8 @@ DOCKER_FLAGS := --rm \
 help:
 	@awk 'BEGIN{FS=":.*##"; printf "Targets:\n"} /^[a-zA-Z_-]+:.*##/ {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-image: $(IMAGE_STAMP) ## Build the Docker image (cached)
-
-$(IMAGE_STAMP): Dockerfile docker-entrypoint.sh
+image: ## Build the Docker image (Docker reuses unchanged layers)
 	docker build --build-arg NODE_IMAGE=$(NODE_IMAGE) -t $(IMAGE_TAG) .
-	@touch $(IMAGE_STAMP)
 
 dev: image ## Start the Vite dev server on http://localhost:$(PORT)
 	docker run -it $(DOCKER_FLAGS) -p $(PORT):5173 $(IMAGE_TAG) \
@@ -41,14 +36,16 @@ dev: image ## Start the Vite dev server on http://localhost:$(PORT)
 install: image ## Run `npm install` in the container
 	docker run -i $(DOCKER_FLAGS) $(IMAGE_TAG) npm install
 
-build: image ## npm install + npm run build
-	docker run -i $(DOCKER_FLAGS) $(IMAGE_TAG) sh -c 'npm install && npm run build'
+build: image ## Install the lockfile and build
+	docker run -i $(DOCKER_FLAGS) $(IMAGE_TAG) sh -c 'npm ci --no-audit --no-fund && npm run build'
 
 zip: build ## Build and regenerate dist.zip
-	docker run -i $(DOCKER_FLAGS) $(IMAGE_TAG) sh -c 'rm -f dist.zip && zip -r dist.zip dist/*'
+	docker run -i $(DOCKER_FLAGS) $(IMAGE_TAG) sh scripts/zip.sh
 
-release: image ## Clean build: rm dist*, npm install, build, zip
-	docker run -i $(DOCKER_FLAGS) $(IMAGE_TAG) sh -c 'rm -f dist.zip && rm -rf dist && npm install && npm run build && zip -r dist.zip dist/*'
+release: ## Offline release using a digest-pinned complete toolchain image
+	@case "$(RELEASE_IMAGE)" in sha256:*|*@sha256:*) ;; *) echo 'Set RELEASE_IMAGE to an immutable image digest' >&2; exit 2;; esac
+	docker image inspect "$(RELEASE_IMAGE)" >/dev/null
+	docker run -i --pull=never --network=none $(DOCKER_FLAGS) -e STATSVIZ_RELEASE_IMAGE="$(RELEASE_IMAGE)" "$(RELEASE_IMAGE)" sh scripts/release.sh
 
 run: image ## Run an arbitrary command in the container: make run CMD="npm outdated"
 	@if [ -z "$(CMD)" ]; then \
@@ -65,4 +62,4 @@ clean: ## Remove dist/, dist.zip, node_modules/
 distclean: clean ## Also remove the Docker image and npm cache volume
 	-docker image rm $(IMAGE_TAG) 2>/dev/null || true
 	-docker volume rm $(NPM_CACHE_VOLUME) 2>/dev/null || true
-	rm -f $(IMAGE_STAMP)
+	rm -f .docker-image-stamp
