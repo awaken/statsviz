@@ -51,12 +51,16 @@ export default class StatsManager {
     if (this.#times.length === this.#capacity) this.#droppedAt = this.#times.first;
     this.#times.push(now);
     for (const [name, buffers] of this.#plotData) {
-      buffers.forEach((buffer, i) => buffer.push(payload.series[name][i]));
+      const values = payload.series[name];
+      buffers.forEach((buffer, i) => {
+        const value = values?.[i];
+        buffer.push(Number.isFinite(value) ? value : NaN);
+      });
     }
     const oldest = this.#times.first;
     for (const [name, events] of this.#eventsData) {
       events.drop(events.lowerBound(oldest));
-      const timestamp = Math.floor(payload.series[name][0]);
+      const timestamp = Math.floor(payload.series[name]?.[0]);
       if (Number.isFinite(timestamp) && timestamp >= oldest && timestamp <= now &&
           (!events.length || timestamp > events.last)) events.push(timestamp);
     }

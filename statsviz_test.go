@@ -15,8 +15,24 @@ import (
 
 	"github.com/gorilla/websocket"
 
+	"github.com/arl/statsviz/internal/plot"
 	"github.com/arl/statsviz/internal/static"
 )
+
+var auditFailMetrics func(*plot.List)
+
+func TestAuditCollectorWriteFailure(t *testing.T) {
+	if auditFailMetrics == nil {
+		t.Skip("test-only metric injection overlay not selected")
+	}
+	s := newServer(t, SendFrequency(time.Millisecond))
+	auditFailMetrics(s.plots)
+	select {
+	case <-s.clients.ctx.Done():
+	case <-time.After(time.Second):
+		t.Fatal("collector failure did not cancel connected clients")
+	}
+}
 
 func TestWebSocketContinuesAfterNonFiniteUserSample(t *testing.T) {
 	var value atomic.Uint64
@@ -476,4 +492,44 @@ func TestRootRejectsAmbiguousPaths(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAuditZeroValueIndex(t *testing.T) {
+	for _, beforeWs := range []bool{false, true} {
+		t.Run(map[bool]string{false: "index alone", true: "index before websocket"}[beforeWs], func(t *testing.T) {
+			var srv Server
+			defer srv.Close()
+			handler := srv.Index()
+			if beforeWs {
+				_ = srv.Ws()
+			}
+			testIndex(t, handler, "http://example.test/debug/statsviz/")
+		})
+	}
+}
+
+func TestAuditServerErrors(t *testing.T) {
+	if err := RegisterDefault(SendFrequency(0)); err == nil {
+		t.Fatal("invalid registration succeeded")
+	}
+	p, err := (TimeSeriesPlotConfig{Name: "duplicate", Series: []TimeSeries{{Name: "value", GetValue: func() float64 { return 1 }}}}).Build()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if s, err := NewServer(TimeseriesPlot(p), TimeseriesPlot(p)); err == nil {
+		s.Close()
+		t.Fatal("duplicate plots accepted")
+	}
+	t.Setenv("STATSVIZ_AUDIT_BOOL", "malformed")
+	if parseBoolEnv("STATSVIZ_AUDIT_BOOL") {
+		t.Fatal("invalid boolean became true")
+	}
+	upgrader := newWsUpgrader(func() bool { return true })
+	if upgrader.CheckOrigin == nil || !upgrader.CheckOrigin(httptest.NewRequest("GET", "/", nil)) {
+		t.Fatal("debug origin option did not allow request")
+	}
+	previous := debugEnabled
+	debugEnabled = func() bool { return true }
+	defer func() { debugEnabled = previous }()
+	dbglog("audit debug %s", "format")
 }

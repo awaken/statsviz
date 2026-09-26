@@ -1,3 +1,11 @@
+v0.8.5 / 2026-09-26
+==============
+  * Initialize zero-value server defaults before creating HTTP handlers.
+  * Preserve missing samples and allow explicit redraws while live updates are paused.
+  * Finish active plot sweeps fairly while coalescing the newest pending sample.
+  * Process WebSocket ping and close frames and promptly release closed clients.
+  * Rebuild deterministic frontend assets and expand server and browser regressions.
+
 v0.8.4 / 2026-09-16
 ==============
   * Make asset archives reproducible with fixed metadata and atomic replacement.

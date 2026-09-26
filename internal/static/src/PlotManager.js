@@ -7,6 +7,7 @@ export default class PlotManager {
   #resizeHandle = null;
   #resizeTimer = null;
   #resizeListener;
+  #pendingUpdate = null;
   #disposed = false;
 
   constructor(config) {
@@ -40,6 +41,7 @@ export default class PlotManager {
     if (this.#resizeHandle !== null) cancelAnimationFrame(this.#resizeHandle);
     if (this.#staggerHandle !== null) cancelAnimationFrame(this.#staggerHandle);
     this.#resizeTimer = this.#resizeHandle = this.#staggerHandle = null;
+    this.#pendingUpdate = null;
     this.plots.forEach(plot => plot.dispose());
     this.plots = [];
     this.#shapesCache.clear();
@@ -61,6 +63,20 @@ export default class PlotManager {
 
   update(data, gcEnabled, timeRange, force = false) {
     if (this.#disposed || !data.times.length) return;
+
+    this.#pendingUpdate = {
+      data,
+      gcEnabled,
+      timeRange,
+      force: force || this.#pendingUpdate?.force || false,
+    };
+    if (this.#staggerHandle === null) this.#runUpdate();
+  }
+
+  #runUpdate() {
+    const {data, gcEnabled, timeRange, force} = this.#pendingUpdate;
+    this.#pendingUpdate = null;
+
     // Create GC vertical lines - only if needed.
     const shapes = new Map();
     if (gcEnabled) {
@@ -98,12 +114,6 @@ export default class PlotManager {
     const now = data.times[data.times.length - 1];
     const xrange = [now - timeRange * 1000, now];
 
-    // Cancel any pending update to avoid overlapping updates
-    if (this.#staggerHandle !== null) {
-      cancelAnimationFrame(this.#staggerHandle);
-      this.#staggerHandle = null;
-    }
-
     const visiblePlots = this.plots.filter((p) => p.isVisible());
     let index = 0;
 
@@ -120,6 +130,7 @@ export default class PlotManager {
         this.#staggerHandle = requestAnimationFrame(processBatch);
       } else {
         this.#staggerHandle = null;
+        if (this.#pendingUpdate !== null) this.#runUpdate();
       }
     };
 

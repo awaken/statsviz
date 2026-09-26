@@ -17,6 +17,8 @@ func TestTimeSeriesPlotConfigErrors(t *testing.T) {
 		var target ErrReservedPlotName
 		if _, err := tsb.Build(); !errors.As(err, &target) {
 			t.Errorf("Build() returned err = %v, want %v", err, target)
+		} else if err.Error() != `"timestamp" is a reserved plot name` {
+			t.Errorf("reserved-name diagnostic = %q", err)
 		}
 	})
 	t.Run("no time series", func(t *testing.T) {
@@ -74,6 +76,17 @@ func TestTimeSeriesPlotConfigErrors(t *testing.T) {
 		}
 		if _, err := cfg.Build(); err == nil {
 			t.Error("Build() accepted an invalid series type")
+		}
+	})
+	t.Run("invalid hover mode", func(t *testing.T) {
+		cfg := TimeSeriesPlotConfig{
+			Name: "audit",
+			Series: []TimeSeries{{
+				Name: "sample", HoverOn: "invalid", GetValue: func() float64 { return 1 },
+			}},
+		}
+		if _, err := cfg.Build(); err == nil {
+			t.Error("Build() accepted an invalid hover mode")
 		}
 	})
 }

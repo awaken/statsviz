@@ -12,14 +12,18 @@ let rafId = null;
 let navReady = false;
 let pendingUpdate = false;
 let forceNextUpdate = false;
+let pausedSnapshot = null;
 
 const scheduleUpdate = () => {
   if (rafId !== null) return; // Already scheduled
 
   rafId = requestAnimationFrame(() => {
     rafId = null;
-    if (pendingUpdate && running) {
-      const data = statsMgr.slice(timerange);
+    if (pendingUpdate && (running || forceNextUpdate)) {
+      if (running) pausedSnapshot = null;
+      const data = running
+        ? statsMgr.slice(timerange)
+        : (pausedSnapshot ??= statsMgr.slice(Number.POSITIVE_INFINITY));
       const warning = document.getElementById("history-warning");
       if (warning) warning.hidden = !data.historyLimited;
       plotMgr.update(data, gcEnabled, timerange, forceNextUpdate);
@@ -47,6 +51,7 @@ export const connect = () => {
       if (rafId !== null) cancelAnimationFrame(rafId);
       rafId = null;
       pendingUpdate = forceNextUpdate = false;
+      pausedSnapshot = null;
       plotMgr?.dispose();
       plotMgr = new PlotManager(cfg);
       statsMgr = new StatsManager(600, cfg);

@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
-src=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-root=$(CDPATH= cd -- "$src/../../../../.." && pwd)
+src=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+root=$(CDPATH='' cd -- "$src/../../../../.." && pwd)
 dir=$(mktemp -d "$root/tmp/statsviz-make-XXXXXX")
 trap 'rm -rf "$dir"' EXIT HUP INT TERM
 cp "$src/Makefile" "$src/Dockerfile" "$src/docker-entrypoint.sh" "$dir/"

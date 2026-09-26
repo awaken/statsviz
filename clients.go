@@ -10,9 +10,11 @@ import (
 	"github.com/arl/statsviz/internal/plot"
 )
 
+const maxClientMessageSize = 1024
+
 type clients struct {
-	cfg *plot.Config
-	ctx context.Context
+	cfg          *plot.Config
+	ctx          context.Context
 	writeTimeout time.Duration
 
 	mu sync.RWMutex
@@ -52,6 +54,18 @@ func (c *clients) add(conn *websocket.Conn) {
 	c.mu.Lock()
 	c.m[conn] = ch
 	c.mu.Unlock()
+	readDone := make(chan struct{})
+	conn.SetReadLimit(maxClientMessageSize)
+
+	// Gorilla processes ping and close frames while reading.
+	go func() {
+		defer close(readDone)
+		for {
+			if _, _, err := conn.NextReader(); err != nil {
+				return
+			}
+		}
+	}()
 
 	go func() {
 		defer func() {
@@ -68,6 +82,8 @@ func (c *clients) add(conn *websocket.Conn) {
 		for {
 			select {
 			case <-c.ctx.Done():
+				return
+			case <-readDone:
 				return
 			case msg := <-ch:
 				if err := c.sendbuf(conn, msg); err != nil {

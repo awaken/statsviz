@@ -250,6 +250,11 @@ func TimeseriesPlot(tsp TimeSeriesPlot) Option {
 // interface HTML page. By default, the handler is served at the path specified
 // by the root. Use [Root] to change the path.
 func (s *Server) Index() http.HandlerFunc {
+	if s.plots == nil {
+		// Default initialization has no options or user plots that can fail.
+		_ = s.init()
+	}
+
 	dist := http.FileServerFS(static.Assets())
 	return http.StripPrefix(s.root+"/", dist).ServeHTTP
 }
