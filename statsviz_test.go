@@ -172,6 +172,25 @@ func TestIndex(t *testing.T) {
 	testIndex(t, srv.Index(), "http://example.com/debug/statsviz/")
 }
 
+func TestIndexInvalidatesCachedHTML(t *testing.T) {
+	t.Parallel()
+
+	req := httptest.NewRequest(http.MethodGet, "http://example.com/debug/statsviz/", nil)
+	req.Header.Set("If-Modified-Since", time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC).Format(http.TimeFormat))
+	w := httptest.NewRecorder()
+	newServer(t).Index().ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("cached index status = %d; want %d with the current asset references", w.Code, http.StatusOK)
+	}
+	if got := w.Header().Get("Cache-Control"); got != "no-store" {
+		t.Fatalf("index Cache-Control = %q; want no-store", got)
+	}
+	if !strings.Contains(w.Body.String(), `<script type="module"`) {
+		t.Fatal("index response omitted the current JavaScript bundle reference")
+	}
+}
+
 func TestRoot(t *testing.T) {
 	t.Parallel()
 

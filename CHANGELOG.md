@@ -1,3 +1,7 @@
+v0.8.6 / 2026-09-27
+==============
+  * Prevent cached dashboard HTML from referencing bundles removed by a newer release.
+
 v0.8.5 / 2026-09-26
 ==============
   * Initialize zero-value server defaults before creating HTTP handlers.

@@ -256,7 +256,19 @@ func (s *Server) Index() http.HandlerFunc {
 	}
 
 	dist := http.FileServerFS(static.Assets())
-	return http.StripPrefix(s.root+"/", dist).ServeHTTP
+	handler := http.StripPrefix(s.root+"/", dist)
+	indexPath := s.root + "/"
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == indexPath {
+			// A cached index can reference bundles removed by a newer release.
+			w.Header().Set("Cache-Control", "no-store")
+			r = r.Clone(r.Context())
+			r.Header = r.Header.Clone()
+			r.Header.Del("If-Modified-Since")
+			r.Header.Del("If-None-Match")
+		}
+		handler.ServeHTTP(w, r)
+	}
 }
 
 func parseBoolEnv(name string) bool {
